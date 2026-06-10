@@ -49,16 +49,15 @@ export async function POST(req: NextRequest) {
 
       if (GEMINI_KEY) {
         try {
-          const docIndex = docs.map((d, i) => `[${i + 1}] ${d.title}`).join("\n");
+          const docLabels = docs.map(d => d.title).join(", ");
 
           const prompt = `You are futureBank AI — a helpful financial assistant for African university students.
 
 Answer the user's question based ONLY on the knowledge base below.
 
-When you use information from a specific document, cite it inline like [1], [2], etc.
+When you use information from a specific document, cite it inline with the document name in brackets like [Accounts] or [Security].
 
-Available documents:
-${docIndex}
+Available documents: ${docLabels}
 
 KNOWLEDGE BASE:
 ${knowledgeBase}
@@ -130,9 +129,9 @@ Question: ${question}`;
             }
           }
 
-          // Detect cited sources
-          const citedSources = docs.filter((_, i) =>
-            fullText.includes(`[${i + 1}]`)
+          // Detect cited sources by document name
+          const citedSources = docs.filter(d =>
+            fullText.includes(`[${d.title}]`)
           );
 
           close({
