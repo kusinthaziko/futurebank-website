@@ -3,6 +3,7 @@ import "./globals.css";
 import Nav from "./components/ui/Nav";
 import Footer from "./components/ui/Footer";
 import BottomBar from "./components/ui/BottomBar";
+import ChatBubble from "./components/ChatBubble";
 
 export const metadata: Metadata = {
   title: "futureBank — Campus Financial Super-App",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Footer />
         <BottomBar />
+        <ChatBubble />
       </body>
     </html>
   );
