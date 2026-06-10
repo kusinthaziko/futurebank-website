@@ -40,7 +40,7 @@ ${knowledgeBase}
 Question: ${question}`;
 
           const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${GEMINI_KEY}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:streamGenerateContent?alt=sse&key=${GEMINI_KEY}`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
