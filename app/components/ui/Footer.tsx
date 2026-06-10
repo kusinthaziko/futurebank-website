@@ -5,8 +5,7 @@ export default function Footer() {
     <footer className="py-12 px-6 border-t border-[var(--border)]">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center font-black text-lg text-white"
-            style={{ background: "linear-gradient(135deg, var(--blue-mid), var(--blue))" }}>f</div>
+          <img src="/icon.png" alt="futureBank" className="w-8 h-8 rounded-xl" />
           <div>
             <div className="font-bold text-sm">futureBank</div>
             <div className="text-xs text-[var(--subtle)]">Campus financial super-app</div>

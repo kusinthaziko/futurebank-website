@@ -18,8 +18,7 @@ export default function Nav() {
   return (
     <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[#060D1Adc] backdrop-blur-xl">
       <Link href="/" className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xl text-white"
-          style={{ background: "linear-gradient(135deg, var(--blue-mid), var(--blue))" }}>f</div>
+        <img src="/icon.png" alt="futureBank" className="w-9 h-9 rounded-xl" />
         <span className="font-bold text-lg">futureBank</span>
       </Link>
 
