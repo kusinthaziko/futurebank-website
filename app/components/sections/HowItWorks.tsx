@@ -11,35 +11,22 @@ const steps = [
 export default function HowItWorks() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
-
   return (
     <section ref={ref} className="py-20 px-6 max-w-5xl mx-auto">
-      <motion.div initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}>
-        <p className="text-xs font-bold uppercase tracking-widest mb-3 text-center" style={{ color: "var(--blue-light)" }}>How It Works</p>
-        <h2 className="font-black mb-16 text-center" style={{ fontSize: "clamp(28px, 5vw, 48px)", letterSpacing: "-1px" }}>
-          Up and running in minutes
-        </h2>
+      <motion.div initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} className="text-center">
+        <p className="text-xs font-bold uppercase tracking-widest mb-3 text-[var(--blue-light)]">How It Works</p>
+        <h2 className="font-black mb-12" style={{ fontSize: "clamp(28px,5vw,48px)", letterSpacing: "-1px" }}>Up and running in minutes</h2>
       </motion.div>
-
-      <div className="flex flex-col md:flex-row items-stretch gap-0">
+      <div className="flex flex-col md:flex-row gap-4">
         {steps.map((s, i) => (
-          <div key={s.n} className="flex-1 flex flex-col md:flex-row items-stretch">
-            <motion.div
-              initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.15 }}
-              className="flex-1 fb-card p-8 flex flex-col gap-4">
-              <span className="font-black text-5xl" style={{ color: "var(--border)", letterSpacing: "-2px" }}>{s.n}</span>
-              <h3 className="text-lg font-bold">{s.title}</h3>
-              <p className="text-sm leading-relaxed" style={{ color: "var(--muted)" }}>{s.desc}</p>
-            </motion.div>
-            {i < steps.length - 1 && (
-              <div className="hidden md:flex items-center justify-center px-3">
-                <div className="w-8 h-0.5 rounded" style={{ background: "var(--border)" }} />
-                <div className="w-0 h-0 border-t-4 border-b-4 border-l-8 border-transparent"
-                  style={{ borderLeftColor: "var(--border)" }} />
-              </div>
-            )}
-          </div>
+          <motion.div key={s.n} initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.5, delay: i * 0.15 }}
+            className="flex-1 rounded-3xl border border-[var(--border)] p-8 flex flex-col gap-4 hover:-translate-y-1 hover:border-[var(--blue)] transition-all duration-200"
+            style={{ background: "var(--card)" }}>
+            <span className="font-black text-[var(--border)]" style={{ fontSize: 56, letterSpacing: "-3px" }}>{s.n}</span>
+            <h3 className="text-lg font-bold">{s.title}</h3>
+            <p className="text-sm text-[var(--muted)] leading-relaxed">{s.desc}</p>
+          </motion.div>
         ))}
       </div>
     </section>

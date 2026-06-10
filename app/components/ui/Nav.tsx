@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { cn } from "../../lib/cn";
 
 const links = [
   { href: "/features", label: "Features" },
@@ -15,44 +16,42 @@ export default function Nav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between"
-      style={{ background: "rgba(6,13,26,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(30,58,95,0.5)" }}>
+    <nav className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[#060D1Adc] backdrop-blur-xl">
       <Link href="/" className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xl text-white"
-          style={{ background: "linear-gradient(135deg, #0D2F6E, #1A56DB)" }}>f</div>
+          style={{ background: "linear-gradient(135deg, var(--blue-mid), var(--blue))" }}>f</div>
         <span className="font-bold text-lg">futureBank</span>
       </Link>
 
-      {/* Desktop links */}
       <div className="hidden md:flex items-center gap-8">
         {links.map(l => (
           <Link key={l.href} href={l.href}
-            className="text-sm font-medium transition-colors"
-            style={{ color: path === l.href ? "white" : "var(--muted)" }}>
+            className={cn("text-sm font-medium transition-colors hover:text-white",
+              path === l.href ? "text-white" : "text-[var(--muted)]")}>
             {l.label}
           </Link>
         ))}
       </div>
 
       <div className="flex items-center gap-3">
-        <Link href="/#download" className="btn-primary text-sm px-5 py-2.5">
+        <Link href="/#download"
+          className="px-5 py-2.5 rounded-full text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
+          style={{ background: "linear-gradient(135deg, var(--blue), var(--blue-light))" }}>
           Download
         </Link>
-        {/* Mobile menu toggle */}
-        <button className="md:hidden p-2" onClick={() => setOpen(!open)}
-          style={{ color: "var(--muted)" }}>
+        <button onClick={() => setOpen(!open)}
+          className="md:hidden p-2 text-[var(--muted)] text-lg">
           {open ? "✕" : "☰"}
         </button>
       </div>
 
-      {/* Mobile menu */}
       {open && (
-        <div className="absolute top-full left-0 right-0 py-4 flex flex-col gap-1 md:hidden"
-          style={{ background: "rgba(6,13,26,0.98)", borderBottom: "1px solid var(--border)" }}>
+        <div className="absolute top-full inset-x-0 flex flex-col border-b border-[var(--border)] md:hidden"
+          style={{ background: "rgba(6,13,26,0.98)" }}>
           {links.map(l => (
             <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
-              className="px-6 py-3 text-sm font-medium"
-              style={{ color: path === l.href ? "white" : "var(--muted)" }}>
+              className={cn("px-6 py-3 text-sm font-medium",
+                path === l.href ? "text-white" : "text-[var(--muted)]")}>
               {l.label}
             </Link>
           ))}
