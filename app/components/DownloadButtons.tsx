@@ -32,8 +32,8 @@ export default function DownloadButtons() {
           href={APKS[key]}
           className="flex items-center justify-between rounded-2xl px-5 py-4 border transition-all duration-200 hover:-translate-y-1"
           style={{
-            background: detected === key ? "rgba(26,86,219,0.1)" : "rgba(18,32,64,0.8)",
-            borderColor: detected === key ? "#1A56DB" : "#1E3A5F",
+            background: detected === key ? "rgba(0,105,92,0.1)" : "rgba(18,32,64,0.8)",
+            borderColor: detected === key ? "#00695C" : "#1E3A5F",
           }}
         >
           <div>
@@ -45,7 +45,7 @@ export default function DownloadButtons() {
               ✓ Best for you
             </span>
           ) : (
-            <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: "rgba(26,86,219,0.15)", color: "#4D7FE8" }}>
+            <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: "rgba(0,105,92,0.15)", color: "#4DB6AC" }}>
               ↓ APK
             </span>
           )}

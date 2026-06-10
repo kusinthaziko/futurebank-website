@@ -13,7 +13,7 @@ export default function Hero() {
         style={{ backgroundImage: "linear-gradient(rgba(30,58,95,0.4) 1px,transparent 1px),linear-gradient(90deg,rgba(30,58,95,0.4) 1px,transparent 1px)", backgroundSize: "40px 40px" }} />
       {/* Glow */}
       <div className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 55% 55% at 25% 50%, rgba(26,86,219,0.14) 0%, transparent 70%)" }} />
+        style={{ background: "radial-gradient(ellipse 55% 55% at 25% 50%, rgba(0,105,92,0.14) 0%, transparent 70%)" }} />
 
       <div className="flex-1 z-10 text-center lg:text-left">
         <motion.span initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.5 }}
@@ -39,11 +39,11 @@ export default function Hero() {
           className="flex flex-wrap gap-3 justify-center lg:justify-start">
           <Link href="/#download"
             className="inline-flex items-center gap-2 px-7 py-4 rounded-full font-bold text-white text-base transition-all hover:-translate-y-1 active:scale-95"
-            style={{ background:"linear-gradient(135deg,var(--blue),var(--blue-light))", boxShadow:"0 8px 32px rgba(26,86,219,0.4)" }}>
+            style={{ background:"linear-gradient(135deg,var(--teal),var(--teal-light))", boxShadow:"0 8px 32px rgba(0,105,92,0.4)" }}>
             ⬇ Download Free
           </Link>
           <Link href="/features"
-            className="inline-flex items-center gap-2 px-7 py-4 rounded-full font-semibold text-base text-[var(--muted)] border border-[var(--border)] transition-all hover:border-[var(--blue)] hover:text-white">
+            className="inline-flex items-center gap-2 px-7 py-4 rounded-full font-semibold text-base text-[var(--muted)] border border-[var(--border)] transition-all hover:border-[var(--teal)] hover:text-white">
             See how it works →
           </Link>
         </motion.div>

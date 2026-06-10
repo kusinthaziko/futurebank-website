@@ -5,11 +5,11 @@
   --color-surface:    #0D1B30;
   --color-card:       #122040;
   --color-border:     #1E3A5F;
-  --color-blue:       #1A56DB;
-  --color-blue-light: #4D7FE8;
-  --color-blue-mid:   #0D2F6E;
-  --color-gold:       #D4A017;
-  --color-gold-light: #E8C547;
+  --color-teal:       #00695C;
+  --color-teal-light: #4DB6AC;
+  --color-teal-dark:  #004D40;
+  --color-gold:       #FF8F00;
+  --color-gold-light: #FFB300;
   --color-muted:      #8BA5D4;
   --color-subtle:     #4D6B9A;
 }
@@ -19,11 +19,11 @@
   --surface:    #0D1B30;
   --card:       #122040;
   --border:     #1E3A5F;
-  --blue:       #1A56DB;
-  --blue-light: #4D7FE8;
-  --blue-mid:   #0D2F6E;
-  --gold:       #D4A017;
-  --gold-light: #E8C547;
+  --teal:       #00695C;
+  --teal-light: #4DB6AC;
+  --teal-dark:  #004D40;
+  --gold:       #FF8F00;
+  --gold-light: #FFB300;
   --muted:      #8BA5D4;
   --subtle:     #4D6B9A;
 }
@@ -52,7 +52,7 @@ body {
 .animate-blink  { animation: blink 1s step-end infinite; }
 
 .gradient-text {
-  background: linear-gradient(135deg, #4D7FE8, #E8C547);
+  background: linear-gradient(135deg, #4DB6AC, #FFB300);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

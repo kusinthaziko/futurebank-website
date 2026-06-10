@@ -11,7 +11,7 @@ export default function SocialProof() {
       <div className="flex gap-12 whitespace-nowrap animate-ticker" style={{ width: "max-content" }}>
         {doubled.map((u, i) => (
           <span key={i} className="text-sm font-medium flex items-center gap-3" style={{ color: "var(--subtle)" }}>
-            <span className="w-1 h-1 rounded-full inline-block" style={{ background: "var(--blue)" }} />
+            <span className="w-1 h-1 rounded-full inline-block" style={{ background: "var(--teal)" }} />
             {u}
           </span>
         ))}

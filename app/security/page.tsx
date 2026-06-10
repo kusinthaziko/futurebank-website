@@ -7,19 +7,14 @@ const sections = [
     detail: "Powered by Android Keystore and iOS Secure Enclave.",
   },
   {
-    icon: "⛓️", title: "Blockchain Identity (KYC)",
-    desc: "Your identity is verified once and recorded on the Polygon blockchain. This creates a tamper-proof, portable record that can be verified instantly by any institution — forever.",
-    detail: "Uses ERC-725 identity standard on Polygon Amoy.",
-  },
-  {
-    icon: "🔒", title: "Certificate Pinning",
-    desc: "The app only communicates with our exact server certificate. This prevents man-in-the-middle attacks even on untrusted campus WiFi networks.",
-    detail: "SHA-256 certificate pins verified on every request.",
-  },
-  {
     icon: "🚫", title: "Screenshot Prevention",
     desc: "Sensitive screens — your balance, transaction history, KYC documents — are protected from screenshots and screen recording. Android FLAG_SECURE is applied automatically.",
     detail: "Implemented via native Android WindowManager flags.",
+  },
+  {
+    icon: "🔑", title: "Encrypted Local Storage",
+    desc: "All data stored on your device — tokens, cached balances — is encrypted using AES-256 via flutter_secure_storage, backed by Android Keystore.",
+    detail: "Keys never leave the device's secure enclave.",
   },
   {
     icon: "⏱️", title: "Auto-Lock",
@@ -27,9 +22,14 @@ const sections = [
     detail: "Configurable: 1, 5, or 15 minutes.",
   },
   {
-    icon: "🔑", title: "Encrypted Local Storage",
-    desc: "All data stored on your device — tokens, cached balances — is encrypted using AES-256 via flutter_secure_storage, backed by Android Keystore.",
-    detail: "Keys never leave the device's secure enclave.",
+    icon: "🔒", title: "Secure API Communication",
+    desc: "All network communication uses TLS 1.3 with certificate pinning. Even on untrusted campus WiFi, your data cannot be intercepted.",
+    detail: "SHA-256 certificate pins verified on every request.",
+  },
+  {
+    icon: "🛡️", title: "KYC Identity Verification",
+    desc: "Upload your student ID for verification. Your identity is checked against institution records and stored securely — not on any blockchain.",
+    detail: "Manual review by institution finance managers.",
   },
 ];
 
@@ -48,13 +48,13 @@ export default function SecurityPage() {
 
       <div className="flex flex-col gap-6">
         {sections.map((s, i) => (
-          <div key={s.title} className="rounded-3xl border border-[var(--border)] p-8 flex gap-6 hover:border-[var(--blue)] transition-all duration-200"
+          <div key={s.title} className="rounded-3xl border border-[var(--border)] p-8 flex gap-6 hover:border-[var(--teal)] transition-all duration-200"
             style={{ background: "var(--card)" }}>
             <div className="text-4xl shrink-0">{s.icon}</div>
             <div>
               <h2 className="text-xl font-bold mb-3">{s.title}</h2>
               <p className="text-[var(--muted)] leading-relaxed mb-3">{s.desc}</p>
-              <p className="text-xs font-mono px-3 py-1.5 rounded-lg inline-block" style={{ background: "rgba(26,86,219,0.1)", color: "var(--blue-light)" }}>
+              <p className="text-xs font-mono px-3 py-1.5 rounded-lg inline-block" style={{ background: "rgba(0,105,92,0.1)", color: "var(--teal-light)" }}>
                 {s.detail}
               </p>
             </div>
@@ -65,7 +65,7 @@ export default function SecurityPage() {
       <div className="text-center mt-12">
         <Link href="/#download"
           className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-bold text-white transition-all hover:-translate-y-1"
-          style={{ background: "linear-gradient(135deg,var(--blue),var(--blue-light))", boxShadow: "0 8px 32px rgba(26,86,219,0.4)" }}>
+          style={{ background: "linear-gradient(135deg,var(--teal),var(--teal-light))", boxShadow: "0 8px 32px rgba(0,105,92,0.4)" }}>
           ⬇ Download Free
         </Link>
       </div>

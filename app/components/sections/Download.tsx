@@ -23,7 +23,7 @@ export default function Download() {
 
   return (
     <section ref={ref} id="download" className="py-24 px-6 text-center"
-      style={{ background: "linear-gradient(180deg, transparent, rgba(26,86,219,0.06), transparent)" }}>
+      style={{ background: "linear-gradient(180deg, transparent, rgba(0,105,92,0.06), transparent)" }}>
       <motion.div initial={{ opacity: 0, y: 32 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }}
         className="max-w-lg mx-auto">
         <div className="text-5xl mb-6">📱</div>
@@ -39,8 +39,8 @@ export default function Download() {
             <a key={o.key} href={`${BASE}/${o.file}`}
               className="flex items-center justify-between rounded-2xl px-5 py-4 border transition-all duration-200 hover:-translate-y-1"
               style={{
-                background: detected === o.key ? "rgba(26,86,219,0.12)" : "var(--card)",
-                borderColor: detected === o.key ? "var(--blue)" : "var(--border)",
+                background: detected === o.key ? "rgba(0,105,92,0.12)" : "var(--card)",
+                borderColor: detected === o.key ? "var(--teal)" : "var(--border)",
               }}>
               <div className="text-left">
                 <div className="font-semibold">{o.name}</div>
@@ -48,7 +48,7 @@ export default function Download() {
               </div>
               {detected === o.key
                 ? <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: "rgba(212,160,23,0.15)", color: "var(--gold)" }}>✓ Best for you</span>
-                : <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: "rgba(26,86,219,0.15)", color: "var(--blue-light)" }}>↓ APK</span>}
+                : <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: "rgba(0,105,92,0.15)", color: "var(--teal-light)" }}>↓ APK</span>}
             </a>
           ))}
         </div>

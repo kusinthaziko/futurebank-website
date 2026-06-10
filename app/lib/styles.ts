@@ -9,7 +9,7 @@ export const card = {
 } as React.CSSProperties;
 
 export const cardHover = {
-  borderColor: "#1A56DB",
+  borderColor: "#00695C",
   transform: "translateY(-4px)",
 } as React.CSSProperties;
 
@@ -23,8 +23,8 @@ export const btnPrimary = {
   fontSize: "15px",
   fontWeight: 700,
   color: "white",
-  background: "linear-gradient(135deg, #1A56DB, #4D7FE8)",
-  boxShadow: "0 8px 32px rgba(26,86,219,0.35)",
+  background: "linear-gradient(135deg, #00695C, #4DB6AC)",
+  boxShadow: "0 8px 32px rgba(0,105,92,0.35)",
   textDecoration: "none",
   cursor: "pointer",
   border: "none",
@@ -52,7 +52,7 @@ export const sectionLabel = {
   textTransform: "uppercase" as const,
   letterSpacing: "2px",
   marginBottom: "12px",
-  color: "#4D7FE8",
+  color: "#4DB6AC",
 };
 
 export const sectionTitle = {

@@ -4,7 +4,7 @@ import { useRef } from "react";
 
 const badges = [
   { icon: "👆", title: "Biometric Auth", desc: "Fingerprint & face unlock. No password needed." },
-  { icon: "⛓️", title: "Blockchain KYC", desc: "Identity verified on-chain. Tamper-proof forever." },
+  { icon: "🔐", title: "Encrypted Storage", desc: "All data encrypted with AES-256 on your device." },
   { icon: "🔒", title: "Certificate Pinning", desc: "Prevents man-in-the-middle attacks on all API calls." },
   { icon: "🚫", title: "Screenshot Prevention", desc: "Sensitive screens protected from screen capture." },
 ];
@@ -23,7 +23,7 @@ export default function Security() {
         {badges.map((b, i) => (
           <motion.div key={b.title} initial={{ opacity: 0, y: 24 }} animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.5, delay: i * 0.1 }}
-            className="rounded-3xl border border-[var(--border)] p-6 text-center hover:-translate-y-1 hover:border-[var(--blue)] transition-all duration-200"
+            className="rounded-3xl border border-[var(--border)] p-6 text-center hover:-translate-y-1 hover:border-[var(--teal)] transition-all duration-200"
             style={{ background: "var(--card)" }}>
             <div className="text-3xl mb-4">{b.icon}</div>
             <h3 className="font-bold mb-2">{b.title}</h3>

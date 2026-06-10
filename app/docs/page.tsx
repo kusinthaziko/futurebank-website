@@ -14,11 +14,11 @@ export default function DocsPage() {
   return (
     <main className="pt-24 pb-20 px-6 max-w-5xl mx-auto">
       <div className="mb-12">
-        <p className="text-xs font-bold uppercase tracking-widest mb-3 text-[var(--blue-light)]">Documentation</p>
+        <p className="text-xs font-bold uppercase tracking-widest mb-3 text-[var(--teal-light)]">Documentation</p>
         <h1 className="font-black mb-4" style={{ fontSize: "clamp(32px,6vw,56px)", letterSpacing: "-2px" }}>Knowledge Base</h1>
         <p className="text-lg text-[var(--muted)] max-w-xl mb-8">Everything you need to get the most out of futureBank.</p>
         <Link href="/ask"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all hover:border-[var(--blue)] hover:text-white border border-[var(--border)] text-[var(--muted)]">
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold transition-all hover:border-[var(--teal)] hover:text-white border border-[var(--border)] text-[var(--muted)]">
           ✨ Can't find what you need? Ask AI →
         </Link>
       </div>
@@ -26,7 +26,7 @@ export default function DocsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {docs.map(d => (
           <Link key={d.slug} href={`/docs/${d.slug}`}
-            className="rounded-3xl border border-[var(--border)] p-6 flex items-start gap-4 hover:-translate-y-1 hover:border-[var(--blue)] transition-all duration-200 group"
+            className="rounded-3xl border border-[var(--border)] p-6 flex items-start gap-4 hover:-translate-y-1 hover:border-[var(--teal)] transition-all duration-200 group"
             style={{ background: "var(--card)" }}>
             <div className="text-3xl">{d.icon}</div>
             <div>

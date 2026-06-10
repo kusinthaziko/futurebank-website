@@ -17,7 +17,7 @@ export default function BottomBar() {
       style={{ background: "rgba(6,13,26,0.95)" }}>
       <Link href="/#download"
         className="flex items-center justify-center gap-2 w-full py-4 rounded-full font-bold text-white text-base transition-all active:scale-95"
-        style={{ background: "linear-gradient(135deg, var(--blue), var(--blue-light))", boxShadow: "0 8px 32px rgba(26,86,219,0.35)" }}>
+        style={{ background: "linear-gradient(135deg, var(--teal), var(--teal-light))", boxShadow: "0 8px 32px rgba(0,105,92,0.35)" }}>
         ⬇ Download futureBank — Free
       </Link>
     </div>

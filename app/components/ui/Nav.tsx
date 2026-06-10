@@ -35,7 +35,7 @@ export default function Nav() {
       <div className="flex items-center gap-3">
         <Link href="/#download"
           className="px-5 py-2.5 rounded-full text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
-          style={{ background: "linear-gradient(135deg, var(--blue), var(--blue-light))" }}>
+          style={{ background: "linear-gradient(135deg, var(--teal), var(--teal-light))" }}>
           Download
         </Link>
         <button onClick={() => setOpen(!open)}
