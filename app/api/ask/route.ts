@@ -1,8 +1,7 @@
 import { NextRequest } from "next/server";
-import { getDocsContext, getAllDocs } from "../../lib/docs";
+import { getDocsContext } from "../../lib/docs";
 
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
-const docs = getAllDocs();
 
 const suggestions = [
   "How do I register?",
@@ -24,7 +23,6 @@ export async function POST(req: NextRequest) {
   const knowledgeBase = getDocsContext();
   const encoder = new TextEncoder();
 
-  // Pick 3 random follow-up suggestions
   const shuffle = [...suggestions].sort(() => Math.random() - 0.5);
   const followUps = shuffle.slice(0, 3);
 
@@ -43,30 +41,21 @@ export async function POST(req: NextRequest) {
         } catch {}
       };
 
-      // Abort when client disconnects
       const abortController = new AbortController();
       req.signal.addEventListener("abort", () => abortController.abort());
 
       if (GEMINI_KEY) {
         try {
-          const docLabels = docs.map(d => d.title).join(", ");
-
           const prompt = `You are futureBank AI — a helpful financial assistant for African university students.
 
-Answer the user's question based ONLY on the knowledge base below.
+Answer the user's question using the knowledge base below. Be concise, friendly, and use plain language.
 
-When you use information from a specific document, cite it inline with the document name in brackets like [Accounts] or [Security].
+Use markdown for formatting (bold, lists, code) where helpful.
 
-Available documents: ${docLabels}
+If the answer isn't in the knowledge base, say so honestly and suggest checking the docs or contacting support.
 
 KNOWLEDGE BASE:
 ${knowledgeBase}
-
-Rules:
-- Be concise and friendly
-- Use markdown for formatting (bold, lists, code)
-- If the answer isn't in the knowledge base, say so honestly and suggest checking the docs or contacting support
-- Always cite sources when you reference specific information
 
 ---
 
@@ -129,15 +118,7 @@ Question: ${question}`;
             }
           }
 
-          // Detect cited sources by document name
-          const citedSources = docs.filter(d =>
-            fullText.includes(`[${d.title}]`)
-          );
-
-          close({
-            confidence: fullText.includes("I couldn't find") || fullText.includes("not in the knowledge base") ? "low" : "high",
-            sources: citedSources.map(s => ({ title: s.title, slug: s.slug })),
-          });
+          close();
         } catch (err: unknown) {
           if (err instanceof Error && err.name === "AbortError") {
             send("⏸️ Stopped.");
@@ -148,28 +129,21 @@ Question: ${question}`;
           close();
         }
       } else {
-        // No API key — keyword-based search
         const q = question.toLowerCase();
-        const matchedDocs = docs.filter(d => {
-          const lower = d.content.toLowerCase();
-          const words = q.split(/\s+/).filter((w: string) => w.length > 3);
-          return words.some((w: string) => lower.includes(w));
-        });
 
-        if (matchedDocs.length === 0) {
+        // Check if the knowledge base has relevant info
+        const kbLower = knowledgeBase.toLowerCase();
+        const words = q.split(/\s+/).filter((w: string) => w.length > 3);
+        const hasMatch = words.some((w: string) => kbLower.includes(w));
+
+        if (!hasMatch) {
           send("I couldn't find specific information about that in our knowledge base. Try asking about **getting started**, **accounts**, **transfers**, **loans**, **AI coach**, or **security**.");
-          close({ confidence: "low", sources: [] });
+          close();
         } else {
-          for (const doc of matchedDocs.slice(0, 2)) {
-            const body = doc.content.split("\n").slice(1).join("\n").trim();
-            const preview = body.split("\n").slice(0, 8).join("\n");
-            send(`**${doc.title}**\n\n${preview}\n\n`);
-            await new Promise(r => setTimeout(r, 20));
-          }
-          close({
-            confidence: "medium",
-            sources: matchedDocs.slice(0, 2).map(s => ({ title: s.title, slug: s.slug })),
-          });
+          const lines = knowledgeBase.split("\n");
+          const preview = lines.slice(0, 20).join("\n");
+          send(`Here's what I found in our docs:\n\n${preview}\n\n`);
+          close();
         }
       }
     },

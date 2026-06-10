@@ -1,23 +1,19 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
-import Link from "next/link";
 
-const starter = [
+const starters = [
   "How do I register?",
   "How do transfers work?",
   "How does the AI coach help me?",
   "Is my money safe?",
   "How do I apply for a loan?",
+  "What are the loan limits?",
 ];
 
-type Source = { title: string; slug: string };
 type Msg = {
   role: "user" | "ai";
   text: string;
-  confidence?: "high" | "medium" | "low";
-  sources?: Source[];
   suggestions?: string[];
-  feedback?: "up" | "down";
 };
 
 export default function AskPage() {
@@ -25,30 +21,88 @@ export default function AskPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
+  const [typewriterText, setTypewriterText] = useState("");
+  const [showCursor, setShowCursor] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const editIndexRef = useRef<number | null>(null);
+
+  // Typewriter
+  const streamTargetRef = useRef("");
+  const typewriterIdxRef = useRef(0);
+  const typewriterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typewriterResolveRef = useRef<(() => void) | null>(null);
+
+  // Cleanup typewriter timer on unmount
+  useEffect(() => {
+    return () => {
+      if (typewriterTimerRef.current) {
+        clearTimeout(typewriterTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, typewriterText, loading]);
+
+  const clearTypewriter = useCallback(() => {
+    if (typewriterTimerRef.current) {
+      clearTimeout(typewriterTimerRef.current);
+      typewriterTimerRef.current = null;
+    }
+    typewriterIdxRef.current = streamTargetRef.current.length;
+    setTypewriterText(streamTargetRef.current);
+    setShowCursor(false);
+  }, []);
+
+  const runTypewriter = useCallback(() => {
+    const target = streamTargetRef.current;
+    if (typewriterIdxRef.current >= target.length) {
+      setShowCursor(false);
+      // Resolve the promise that send() might be awaiting
+      typewriterResolveRef.current?.();
+      typewriterResolveRef.current = null;
+      return;
+    }
+
+    const charsToAdd = Math.min(
+      1 + Math.floor(Math.random() * 2),
+      target.length - typewriterIdxRef.current
+    );
+    typewriterIdxRef.current += charsToAdd;
+    setTypewriterText(target.slice(0, typewriterIdxRef.current));
+    setShowCursor(true);
+
+    typewriterTimerRef.current = setTimeout(runTypewriter, 20 + Math.random() * 15);
+  }, []);
+
+  const startTypewriter = useCallback(() => {
+    if (typewriterTimerRef.current === null) {
+      runTypewriter();
+    }
+  }, [runTypewriter]);
 
   const send = useCallback(async (question: string) => {
     if (!question.trim() || loading) return;
 
-    setMessages(m => [...m, { role: "user", text: question }]);
+    // Push user message and empty AI message immediately
+    setMessages(m => [
+      ...m,
+      { role: "user", text: question },
+      { role: "ai", text: "" },
+    ]);
     setInput("");
+
     setLoading(true);
     setStreaming(true);
-    editIndexRef.current = null;
+    streamTargetRef.current = "";
+    typewriterIdxRef.current = 0;
+    setTypewriterText("");
+    setShowCursor(false);
 
     const ac = new AbortController();
     setAbortController(ac);
-
-    const aiMsg: Msg = { role: "ai", text: "" };
-    setMessages(m => [...m, aiMsg]);
 
     try {
       const res = await fetch("/api/ask", {
@@ -63,9 +117,6 @@ export default function AskPage() {
 
       const decoder = new TextDecoder();
       let buffer = "";
-      let fullText = "";
-      let finalConfidence: "high" | "medium" | "low" | undefined;
-      let finalSources: Source[] = [];
       let finalSuggestions: string[] = [];
 
       while (true) {
@@ -81,17 +132,10 @@ export default function AskPage() {
             try {
               const data = JSON.parse(line.slice(6));
               if (data.chunk) {
-                fullText += data.chunk;
-                setMessages(m => {
-                  const updated = [...m];
-                  const last = updated[updated.length - 1];
-                  if (last?.role === "ai") updated[updated.length - 1] = { ...last, text: fullText };
-                  return updated;
-                });
+                streamTargetRef.current += data.chunk;
+                startTypewriter();
               }
               if (data.done) {
-                finalConfidence = data.confidence;
-                finalSources = data.sources || [];
                 finalSuggestions = data.suggestions || [];
               }
             } catch { /* skip */ }
@@ -99,92 +143,72 @@ export default function AskPage() {
         }
       }
 
+      // Wait for typewriter to finish
+      const hasContent = streamTargetRef.current.length > 0;
+      if (hasContent) {
+        await new Promise<void>(resolve => {
+          typewriterResolveRef.current = resolve;
+          // If typewriter already finished, resolve immediately
+          if (typewriterIdxRef.current >= streamTargetRef.current.length) {
+            resolve();
+            typewriterResolveRef.current = null;
+          }
+        });
+      }
+
+      const finalText = streamTargetRef.current || "No response received.";
+
+      // Update the last AI message with final text
       setMessages(m => {
         const updated = [...m];
-        const last = updated[updated.length - 1];
-        if (last?.role === "ai") {
-          updated[updated.length - 1] = {
-            ...last,
-            text: fullText || "No response received.",
-            confidence: finalConfidence,
-            sources: finalSources,
-            suggestions: finalSuggestions,
-          };
+        for (let i = updated.length - 1; i >= 0; i--) {
+          if (updated[i].role === "ai" && !updated[i].text) {
+            updated[i] = { ...updated[i], text: finalText, suggestions: finalSuggestions };
+            break;
+          }
         }
         return updated;
       });
     } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") {
-        setMessages(m => {
-          const updated = [...m];
-          const last = updated[updated.length - 1];
-          if (last?.role === "ai" && !last.text) {
-            updated[updated.length - 1] = { ...last, text: "⏸️ Stopped." };
+      clearTypewriter();
+
+      const errorText =
+        err instanceof DOMException && err.name === "AbortError"
+          ? streamTargetRef.current || "⏸️ Stopped."
+          : "Connection error. Please try again.";
+
+      setMessages(m => {
+        const updated = [...m];
+        for (let i = updated.length - 1; i >= 0; i--) {
+          if (updated[i].role === "ai" && !updated[i].text) {
+            updated[i] = { ...updated[i], text: errorText };
+            break;
           }
-          return updated;
-        });
-      } else {
-        setMessages(m => {
-          const updated = [...m];
-          const last = updated[updated.length - 1];
-          if (last?.role === "ai") updated[updated.length - 1] = { ...last, text: "Connection error. Please try again." };
-          return updated;
-        });
-      }
+        }
+        return updated;
+      });
     } finally {
       setLoading(false);
       setStreaming(false);
       setAbortController(null);
+      clearTypewriter();
     }
-  }, [loading]);
+  }, [loading, startTypewriter, clearTypewriter]);
 
   const stop = useCallback(() => {
     abortController?.abort();
-  }, [abortController]);
+    clearTypewriter();
+  }, [abortController, clearTypewriter]);
 
   const retry = useCallback(() => {
     const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
     if (lastUserMsg) {
-      // Remove the failed AI message and last user message, resend
+      // Remove everything from the last user message onward
       const idx = messages.lastIndexOf(lastUserMsg);
       setMessages(m => m.slice(0, idx));
       send(lastUserMsg.text);
     }
   }, [messages, send]);
-
-  const editMessage = useCallback((text: string) => {
-    setInput(text);
-    inputRef.current?.focus();
-  }, []);
-
-  const giveFeedback = useCallback((idx: number, type: "up" | "down") => {
-    setMessages(m => {
-      const updated = [...m];
-      const msg = updated[idx];
-      if (msg?.role === "ai") {
-        updated[idx] = { ...msg, feedback: msg.feedback === type ? undefined : type };
-      }
-      return updated;
-    });
-  }, []);
-
-  function getConfidenceColor(confidence?: "high" | "medium" | "low") {
-    switch (confidence) {
-      case "high": return "#6EE7B7";
-      case "medium": return "#FFB300";
-      case "low": return "#EF4444";
-      default: return "var(--subtle)";
-    }
-  }
-
-  function getConfidenceLabel(confidence?: "high" | "medium" | "low") {
-    switch (confidence) {
-      case "high": return "Verified from docs";
-      case "medium": return "Based on knowledge base";
-      case "low": return "Uncertain answer";
-      default: return "";
-    }
-  }
 
   function renderMarkdown(text: string) {
     return text
@@ -200,7 +224,7 @@ export default function AskPage() {
   }
 
   return (
-    <main className="flex flex-col h-dvh pt-16">
+    <main className="flex flex-col h-dvh">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] flex-shrink-0" style={{ background: "var(--navy)" }}>
         <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
@@ -214,15 +238,13 @@ export default function AskPage() {
             Online
           </div>
         </div>
-        <Link href="/docs" className="ml-auto text-xs px-3 py-1.5 rounded-full border border-[var(--border)] text-[var(--muted)] hover:border-[var(--teal)] hover:text-white transition-all">
-          Docs ↗
-        </Link>
       </div>
 
       {/* Messages */}
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto px-4 py-6">
         <div className="max-w-2xl mx-auto flex flex-col gap-6">
           {messages.length === 0 ? (
+            /* Welcome screen */
             <div className="flex flex-col items-center justify-center min-h-[60dvh] gap-8 text-center">
               <div>
                 <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl"
@@ -234,10 +256,10 @@ export default function AskPage() {
                   Ask anything about the app, your account, or financial advice.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {starter.map(q => (
+              <div className="flex flex-wrap gap-2 justify-center max-w-md">
+                {starters.map(q => (
                   <button key={q} onClick={() => send(q)}
-                    className="px-4 py-2.5 rounded-full text-sm border border-[var(--border)] text-[var(--muted)] hover:border-[var(--teal)] hover:text-white transition-all"
+                    className="px-4 py-2.5 rounded-full text-sm border border-[var(--border)] text-[var(--muted)] hover:border-[var(--teal)] hover:text-white transition-all active:scale-95"
                     style={{ background: "var(--card)" }}>
                     {q}
                   </button>
@@ -246,120 +268,77 @@ export default function AskPage() {
             </div>
           ) : (
             <>
-              {messages.map((m, i) => (
-                <div key={i} className="flex flex-col gap-2">
-                  <div className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
-                    {m.role === "ai" && (
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-1"
-                        style={{ background: "linear-gradient(135deg, var(--teal-dark), var(--teal))" }}>
-                        ✨
+              {messages.map((m, i) => {
+                const isLastAi = i === messages.length - 1 && m.role === "ai";
+                const displayText = isLastAi && streaming && !m.text ? typewriterText : m.text;
+                const isTyping = isLastAi && streaming && showCursor;
+
+                return (
+                  <div key={i} className="flex flex-col gap-2">
+                    <div className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
+                      {m.role === "ai" && (
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-1"
+                          style={{ background: "linear-gradient(135deg, var(--teal-dark), var(--teal))" }}>
+                          ✨
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-1.5 max-w-[85%]">
+                        <div
+                          className="text-sm leading-relaxed px-4 py-3"
+                          style={{
+                            background: m.role === "user" ? "var(--teal)" : "var(--card)",
+                            color: m.role === "user" ? "white" : "var(--muted)",
+                            borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                            border: m.role === "ai" ? "1px solid var(--border)" : "none",
+                          }}>
+                          {displayText ? (
+                            <>
+                              <span dangerouslySetInnerHTML={{ __html: renderMarkdown(displayText) }} />
+                              {isTyping && (
+                                <span className="inline-block w-[2px] h-[1em] ml-0.5 align-text-bottom animate-pulse"
+                                  style={{ background: "var(--teal)" }} />
+                              )}
+                            </>
+                          ) : isLastAi && streaming ? (
+                            <span className="inline-flex gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[var(--subtle)] animate-bounce" style={{ animationDelay: "0s" }} />
+                              <span className="w-1.5 h-1.5 rounded-full bg-[var(--subtle)] animate-bounce" style={{ animationDelay: "0.15s" }} />
+                              <span className="w-1.5 h-1.5 rounded-full bg-[var(--subtle)] animate-bounce" style={{ animationDelay: "0.3s" }} />
+                            </span>
+                          ) : (
+                            <span dangerouslySetInnerHTML={{ __html: renderMarkdown(m.text || "") }} />
+                          )}
+                        </div>
+
+                        {/* Follow-up suggestions */}
+                        {m.role === "ai" && m.suggestions && m.suggestions.length > 0 && !streaming && (
+                          <div className="flex flex-wrap gap-1.5 pl-1">
+                            {m.suggestions.map(s => (
+                              <button key={s} onClick={() => send(s)}
+                                className="px-3 py-1.5 rounded-full text-xs border border-[var(--border)] text-[var(--subtle)] hover:border-[var(--teal)] hover:text-white transition-all active:scale-95">
+                                {s} →
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Retry for AI messages */}
+                        {m.role === "ai" && !streaming && m.text && (
+                          <div className="flex items-center gap-1 pl-1">
+                            <button onClick={retry}
+                              className="p-1 rounded text-[var(--subtle)] hover:text-white transition-colors"
+                              title="Retry">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    <div className="flex flex-col gap-1.5 max-w-[85%]">
-                      <div
-                        className="text-sm leading-relaxed px-4 py-3"
-                        style={{
-                          background: m.role === "user" ? "var(--teal)" : "var(--card)",
-                          color: m.role === "user" ? "white" : "var(--muted)",
-                          borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                          border: m.role === "ai" ? "1px solid var(--border)" : "none",
-                        }}
-                        dangerouslySetInnerHTML={{ __html: renderMarkdown(m.text) }}
-                      />
-
-                      {/* Confidence indicator */}
-                      {m.role === "ai" && m.confidence && !streaming && (
-                        <div className="flex items-center gap-1.5 px-1">
-                          <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: getConfidenceColor(m.confidence) }} />
-                          <span className="text-[10px]" style={{ color: "var(--subtle)" }}>{getConfidenceLabel(m.confidence)}</span>
-                        </div>
-                      )}
-
-                      {/* Sources */}
-                      {m.role === "ai" && m.sources && m.sources.length > 0 && !streaming && (
-                        <div className="flex flex-wrap gap-1.5 px-1">
-                          {m.sources.map(s => (
-                            <Link key={s.slug} href={`/docs/${s.slug}`}
-                              className="text-[11px] px-2 py-0.5 rounded-full border border-[var(--border)] hover:border-[var(--teal)] hover:text-white transition-all"
-                              style={{ color: "var(--subtle)" }}>
-                              📄 {s.title}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Actions: feedback + retry + edit */}
-                      {m.role === "ai" && !streaming && (
-                        <div className="flex items-center gap-1 px-1">
-                          <button onClick={() => giveFeedback(i, "up")}
-                            className={`p-1 rounded transition-colors ${m.feedback === "up" ? "text-[var(--teal-light)]" : "text-[var(--subtle)] hover:text-white"}`}
-                            title="Helpful">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                            </svg>
-                          </button>
-                          <button onClick={() => giveFeedback(i, "down")}
-                            className={`p-1 rounded transition-colors ${m.feedback === "down" ? "text-red-400" : "text-[var(--subtle)] hover:text-white"}`}
-                            title="Not helpful">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
-                            </svg>
-                          </button>
-                          <button onClick={retry}
-                            className="p-1 rounded text-[var(--subtle)] hover:text-white transition-colors"
-                            title="Retry">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Edit button for user messages */}
-                      {m.role === "user" && !streaming && (
-                        <div className="flex justify-end px-1">
-                          <button onClick={() => editMessage(m.text)}
-                            className="p-1 rounded text-[var(--subtle)] hover:text-white transition-colors"
-                            title="Edit">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
-                        </div>
-                      )}
                     </div>
                   </div>
-
-                  {/* Follow-up suggestions */}
-                  {m.role === "ai" && m.suggestions && m.suggestions.length > 0 && !streaming && (
-                    <div className="flex flex-wrap gap-1.5 pl-10">
-                      {m.suggestions.map(s => (
-                        <button key={s} onClick={() => send(s)}
-                          className="px-3 py-1.5 rounded-full text-xs border border-[var(--border)] text-[var(--subtle)] hover:border-[var(--teal)] hover:text-white transition-all">
-                          {s} →
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {/* Loading dots */}
-              {loading && !messages[messages.length - 1]?.text && (
-                <div className="flex gap-3">
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-1"
-                    style={{ background: "linear-gradient(135deg, var(--teal-dark), var(--teal))" }}>
-                    ✨
-                  </div>
-                  <div className="px-4 py-3 rounded-2xl border border-[var(--border)] flex gap-1"
-                    style={{ background: "var(--card)", borderRadius: "18px 18px 18px 4px" }}>
-                    {[0, 1, 2].map(i => (
-                      <span key={i} className="w-1.5 h-1.5 rounded-full bg-[var(--subtle)] animate-blink"
-                        style={{ animationDelay: `${i * 0.2}s` }} />
-                    ))}
-                  </div>
-                </div>
-              )}
+                );
+              })}
             </>
           )}
           <div ref={messagesEndRef} />
@@ -369,7 +348,7 @@ export default function AskPage() {
       {/* Input */}
       <div className="border-t border-[var(--border)] flex-shrink-0" style={{ background: "var(--navy)" }}>
         <div className="max-w-2xl mx-auto px-4 py-3">
-          <form onSubmit={e => { e.preventDefault(); send(input); }} className="flex gap-2">
+          <form onSubmit={e => { e.preventDefault(); if (!streaming) send(input); }} className="flex gap-2">
             <input
               ref={inputRef}
               value={input}
@@ -377,9 +356,10 @@ export default function AskPage() {
               placeholder="Ask something..."
               enterKeyHint="send"
               autoComplete="off"
-              className="flex-1 px-5 py-3 rounded-full text-sm bg-[var(--card)] border border-[var(--border)] text-white placeholder-[var(--subtle)] outline-none focus:border-[var(--teal)] transition-colors"
+              disabled={loading}
+              className="flex-1 px-5 py-3 rounded-full text-sm bg-[var(--card)] border border-[var(--border)] text-white placeholder-[var(--subtle)] outline-none focus:border-[var(--teal)] transition-colors disabled:opacity-50"
             />
-            {streaming ? (
+            {streaming || loading ? (
               <button type="button" onClick={stop}
                 className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all hover:opacity-90 active:scale-95"
                 style={{ background: "#EF4444" }}>
@@ -388,11 +368,11 @@ export default function AskPage() {
                 </svg>
               </button>
             ) : (
-              <button type="submit" disabled={!input.trim() || loading}
+              <button type="submit" disabled={!input.trim()}
                 className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-40 transition-all hover:opacity-90 active:scale-95"
                 style={{ background: "linear-gradient(135deg, var(--teal), var(--teal-light))" }}>
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </button>
             )}
